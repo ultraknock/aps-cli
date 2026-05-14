@@ -24,12 +24,6 @@ Install the TypeScript compiler (`tsc`) globally:
 npm install -g typescript
 ```
 
-Verify installation:
-
-```bash
-tsc --version
-```
-
 ## Setup
 
 ### 1. Clone Agent Friendly APS Docs & Build

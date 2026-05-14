@@ -1,4 +1,4 @@
-# API CLI
+# APS CLI
 
 A CLI for the Autodesk Platform Services (APS)
 
