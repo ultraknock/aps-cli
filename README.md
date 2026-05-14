@@ -109,6 +109,67 @@ REST API
 
 Agents naturally reach for scripts and pipelines when a task grows in complexity — and a well-designed CLI meets them there.
 
+#### Chaining Shell Commands
+
+For lightweight tasks, an agent composes a pipeline directly in the shell — piping one command's output into the next to transform and filter data without writing any intermediate files.
+
+```
+  Agent
+    │
+    ├── "List all RFIs marked open in project X and show me the responsible parties"
+    │
+    ▼
+  Shell Pipeline
+    │
+    ├── aps ls acc://hub/project/rfis          ← list RFI resources
+    │       │
+    │       ▼ JSON stream of RFIs
+    ├── | jq '.[] | select(.status=="open")'   ← filter to open only
+    │       │
+    │       ▼ filtered RFIs
+    └── | jq '{id,title,assignedTo}'           ← project relevant fields
+            │
+            ▼
+         { id: "...", title: "...", assignedTo: "..." }
+         { id: "...", title: "...", assignedTo: "..." }
+         ...
+```
+
+#### Composing Scripts for Complex Tasks
+
+When a task spans multiple steps, branches on results, or needs to be repeated, the agent writes a script. The CLI becomes the building block; the script is the strategy.
+
+```
+  Agent
+    │
+    ├── "Generate a weekly cost-variance report across all active projects"
+    │
+    ▼
+  report.sh (written by agent)
+  ┌─────────────────────────────────────────────────────┐
+  │ #!/bin/bash                                         │
+  │                                                     │
+  │ HUBS=$(aps ls acc://)                               │  ← discover hubs
+  │                                                     │
+  │ for HUB in $HUBS; do                                │
+  │   PROJECTS=$(aps ls acc://$HUB)                     │  ← list projects
+  │                                                     │
+  │   for PROJECT in $PROJECTS; do                      │
+  │     BUDGET=$(aps query cost \                       │  ← fetch cost data
+  │       --project $PROJECT \                          │
+  │       --fields variance,forecast,actual)            │
+  │                                                     │
+  │     echo "$PROJECT: $BUDGET" >> report.csv          │  ← accumulate
+  │   done                                              │
+  │ done                                                │
+  │                                                     │
+  │ aps rfi summarize --input report.csv                │  ← summarize
+  └─────────────────────────────────────────────────────┘
+            │
+            ▼
+         report.csv  +  summary.md
+```
+
 CLIs also enable self-testing when augmented by an agent. Since the agent can use the CLI as soon as it has written type-safe TypeScript code, it can self-test features.
 
 ### Non-Compiled CLI Works Even Better
