@@ -1,6 +1,30 @@
 # aps-cli
 
-A lightweight command-line interface starting point for querying Autodesk Platform Services (APS) APIs. Designed to be extended for specific workflows, it comes bare-bones by design.
+A lightweight command-line interface (CLI) starting point for building agent workflows using Autodesk Platform Services (APS) APIs. Designed to be extended (by agents) for specific workflows, it comes bare-bones by design.
+
+## How to Work with an Agent and this CLI
+
+1. Build the CLI (follow steps below).
+2. Log in (recommend using [SSA](https://aps.autodesk.com/en/docs/ssa/v1/developers_guide/overview/))
+3. Define a task you would like the agent to do. Keep it small and simple at first. For example `Get the most recent 10 issues from project X`. Keep in mind: An agent can't do anything the APS CLI can't do. Make sure your ask is possible by reviewing the [APS Doc](https://aps.autodesk.com/developer/documentation). To fast-track you can simply ask `how would you do X using the APS CLI, here are the docs: docs/README.md`. Keep in mind the local docs are not complete but include all the scripts on how to crawl more docs. You can also provide URLs to our live docs.
+4. Grant the CLI needed access to the resources in your task.
+5. Ask the agent using this template:
+
+```
+Using the aps-cli, complete the following task:
+
+<DESCRIBE-TASK>
+
+<DESCRIBE-THE-BROADER-WORKFLOW-THIS-TASK-IS-PART-OF>
+
+Resources:
+<Hub/project URLs, item IDs, or names from ACC/Forma>
+
+Expected output:
+<Describe format — e.g. JSON to stdout, markdown table, summary paragraph>
+
+Not all CLI commands needed for this task may be implemented yet. You have the ability to add and augment the CLI source code using the APS API documentation at `docs/README.md`. Follow the guidance in `AGENTS.md` when changing the source code.
+```
 
 ## [BUILD OPTION 1] Open in a Dev Container
 
@@ -88,23 +112,6 @@ node ./dist/index.js --help
 ### Teaching your Agent to Use the CLI
 
 Edit the path in `skills/aps-cli/SKILL.md` to the full path on your local machine where the `./dist/index.js` is located. Tell the agent to learn this skill as `aps-cli`.
-
-## How to Work with an Agent and this CLI
-
-1. Build the CLI (Follow steps above)
-2. Login (recommend SSA)
-3. Define a task you would like the agent to do. Keep it small and simple at first. For example `Get the most recent 10 issues from project x`. Keep in mind: An agent can't do anything the APS CLI can't do. Make sure your ask is possible by reviewing the [APS Doc](https://aps.autodesk.com/developer/documentation). To fast track you can simply ask `how would you do x using the APIs CLI, here are the docs: docs/README.md`. Keep in mind the local docs are not complete but include all the scripts on how to crawl more docs. You can also provide URLs to our live docs.
-4. Once you have a task in mind, ask the agent in the following way:
-
-```
-Using the aps-cli do the following task:
-
-<DESCRIBE-TASK>
-
-<Provide Links to Real Resources in Forma>
-
-It is possible, not all of the CLI commands you need to do this task are implemented. You have the ability to add and augment this CLI source code. We have provided you with extensive documentation of the APS APIs here: `docs/README.md` locally. Use the guidance in `AGENTS.md` to do your work.
-```
 
 ## Design Philosophy
 
@@ -420,6 +427,10 @@ The output is a map — category names, doc titles, and absolute file paths — 
 ## Pull Requests
 
 Sure. As long as it's within the Design Philosophy.
+
+Things we could improve:
+- Configure & Login UX / AX (agent experience)
+- ...
 
 ## MIT License
 
