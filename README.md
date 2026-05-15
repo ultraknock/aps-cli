@@ -89,7 +89,22 @@ node ./dist/index.js --help
 
 Edit the path in `skills/aps-cli/SKILL.md` to the full path on your local machine where the `./dist/index.js` is located. Tell the agent to learn this skill as `aps-cli`.
 
----
+## How to Work with an Agent and this CLI
+
+1. Build the CLI (Follow steps above)
+2. Login (recommend SSA)
+3. Define a task you would like the agent to do. Keep it small and simple at first. For example `Get the most recent 10 issues from project x`. Keep in mind: An agent can't do anything the APS CLI can't do. Make sure your ask is possible by reviewing the [APS Doc](https://aps.autodesk.com/developer/documentation). To fast track you can simply ask `how would you do x using the APIs CLI, here are the docs: docs/README.md`. Keep in mind the local docs are not complete but include all the scripts on how to crawl more docs. You can also provide URLs to our live docs.
+4. Once you have a task in mind, ask the agent in the following way:
+
+```
+Using the aps-cli do the following task:
+
+<DESCRIBE-TASK>
+
+<Provide Links to Real Resources in Forma>
+
+It is possible, not all of the CLI commands you need to do this task are implemented. You have the ability to add and augment this CLI source code. We have provided you with extensive documentation of the APS APIs here: `docs/README.md` locally. Use the guidance in `AGENTS.md` to do your work.
+```
 
 ## Design Philosophy
 
@@ -98,13 +113,35 @@ Edit the path in `skills/aps-cli/SKILL.md` to the full path on your local machin
 MCP servers and CLIs are both wrappers around REST APIs — but CLIs are a more natural fit for AI agents. LLMs are extensively post-trained on shell usage and Unix toolchains, giving them strong intuition for chaining commands, parsing output, and composing scripts to accomplish complex tasks. When an agent understands the goal, it self-implements strategies using the tools it already knows best.
 
 ```
-REST API
-   │
-   ├── MCP Server ──► Agent calls tool directly
-   │                  (custom protocol, fragile context)
-   │
-   └── CLI ──────────► Agent runs shell commands
-                       (unix patterns, scriptable, chainable)
+  MCP Approach                          CLI Approach
+  ────────────                          ────────────
+
+  ┌───────────────────────────┐         ┌───────────────────────────┐
+  │        MCP directory      │         │          skill file       │
+  │   (built-in tool config)  │         │     (aps-cli/SKILL.md)    │
+  └─────────────┬─────────────┘         └─────────────┬─────────────┘
+                │  auto-registered                    │  agent reads
+                ▼                                     ▼
+  ┌───────────────────────────┐         ┌───────────────────────────┐
+  │           Agent           │         │           Agent           │
+  │        (LLM / AI)         │         │        (LLM / AI)         │
+  └─────────────┬─────────────┘         └─────────────┬─────────────┘
+                │                                     │
+                │  MCP tool call                      │  shell command
+                │  (custom protocol)                  │  (stdin / stdout)
+                │                                     │
+                ▼                                     ▼
+  ┌───────────────────────────┐         ┌───────────────────────────┐
+  │        MCP Server         │         │            CLI            │
+  │  (always-on sidecar proc) │         │    (invoked on demand)    │
+  └─────────────┬─────────────┘         └─────────────┬─────────────┘
+                │                                     │
+                │  HTTP request                       │  HTTP request
+                │                                     │
+                ▼                                     ▼
+  ┌───────────────────────────┐         ┌───────────────────────────┐
+  │         REST API          │         │         REST API          │
+  └───────────────────────────┘         └───────────────────────────┘
 ```
 
 Agents naturally reach for scripts and pipelines when a task grows in complexity — and a well-designed CLI meets them there.
@@ -170,7 +207,49 @@ When a task spans multiple steps, branches on results, or needs to be repeated, 
          report.csv  +  summary.md
 ```
 
-CLIs also enable self-testing when augmented by an agent. Since the agent can use the CLI as soon as it has written type-safe TypeScript code, it can self-test features.
+### Two Agent Deployment Models
+
+This CLI is designed for two distinct agent deployment patterns, each with a different setup workflow.
+
+**Local agents** (Claude Code, Cursor, VS Code Copilot) run directly on the developer's machine inside the same environment where the CLI lives. The developer clones the repo, builds it once, and the agent has immediate access to both the compiled binary and the TypeScript source. Because the source is co-located, the agent can read it, extend it, and self-test against live APIs without any extra steps.
+
+**OpenClaw-style agents** run remotely — in a cloud sandbox or managed runtime — and have no persistent filesystem between sessions. They need to install their tools at the start of each session. For these agents, the fact that this CLI is open source is essential: the agent can clone, install, and run the latest version of the CLI as part of its startup sequence, using the provided `skills/install-aps-cli/SKILL.md` skill. This skill teaches the agent exactly how to get the CLI running on a fresh machine before it starts doing real work.
+
+```
+  ┌─────────────────────────────────────────────────────────────────────────────────────────┐
+  │                                  Agent Deployment Models                                │
+  └─────────────────────────────────────────────────────────────────────────────────────────┘
+
+  LOCAL AGENT (Claude Code, Cursor)          OPENCLAW-STYLE AGENT (remote / cloud sandbox)
+  ─────────────────────────────────────      ──────────────────────────────────────────────
+  Developer Machine                          Session Start
+  ┌───────────────────────────────────┐      ┌───────────────────────────────────────────┐
+  │                                   │      │                                           │
+  │  [manual] git clone <repo>        │      │  [agent] reads                            │
+  │         │                         │      │  skills/install-aps-cli/SKILL.md          │
+  │         ▼                         │      │         │                                 │
+  │  [manual] npm install             │      │         ▼                                 │
+  │         │                         │      │  [agent] git clone <open source repo>     │
+  │         ▼                         │      │         │                                 │
+  │  [manual] give agent              │      │         ▼                                 │
+  │  skills/aps-cli/SKILL.md          │      │  [agent] npm install                      │
+  │         │                         │      │         │                                 │
+  │         ▼                         │      │         ▼                                 │
+  │  [agent] reads skill              │      │  [agent] reads                            │
+  │  [agent] runs commands            │      │  skills/aps-cli/SKILL.md                  │
+  │         │                         │      │         │                                 │
+  │         ▼                         │      │         ▼                                 │
+  │     live APS API                  │      │  [agent] runs commands                    │
+  │                                   │      │         │                                 │
+  │  (source co-located,              │      │         ▼                                 │
+  │   always current)                 │      │     live APS API                          │
+  └───────────────────────────────────┘      │                                           │
+                                             │  (zero manual setup — agent installs      │
+                                             │   fresh each session via open source)     │
+                                             └───────────────────────────────────────────┘
+```
+
+The open-source nature of the CLI is what makes the OpenClaw workflow viable. A closed binary would require a versioned release and a download URL; an open repo means the agent always gets the latest source in one `git clone`.
 
 ### Non-Compiled CLI Works Even Better
 
@@ -221,26 +300,6 @@ SSA (Secure Service Accounts) takes this isolation a step further. Rather than d
 
 ### A Minimal, Focused Interface
 
-Fewer commands mean a cleaner context window. From experience, agent performance on complex tasks improves as the interface simplifies — extraneous commands dilute the signal of what's actually useful. This CLI ships only what's needed to navigate APS data; nothing more.
-
-If you need to add new commands, I would recommend the following:
-
-1. Clone https://github.com/adskdimitrii/aps-ai-friendly-docs
-2. Find the API(s) you are looking for in the offline docs.
-3. Prompt a coding agent with the following:
-
-```
-Add a new command to the aps-cli to help accomplish a new workflow:
-
-<DESCRIBE-WORKFLOW>
-
-Refer to the APS Documentation here:
-
-<PATH-TO-RELEVANT-DOCS>
-```
-
-### Extensibility as a First Principle
-
 Real-world use cases vary. A project manager, a cost engineer, and an automation developer all need different vocabulary from the same underlying API. This CLI is designed to be augmented — help text, commands, and output can be tailored to the business domain of the agent's task.
 
 Since coding agents excel at extending CLIs given API documentation, missing functionality is typically one prompt away. The framework eliminates boilerplate, so every augmentation starts from a working foundation:
@@ -261,9 +320,74 @@ Base CLI (this repo)
 
 The result is a CLI that is both immediately useful and fluid enough to grow with the task.
 
+Fewer commands mean a cleaner context window. From experience, agent performance on complex tasks improves as the interface simplifies — extraneous commands dilute the signal of what's actually useful. This CLI ships only what's needed to navigate APS data; nothing more.
+
+If you need to add new commands, I would recommend the following:
+
+1. Clone https://github.com/adskdimitrii/aps-ai-friendly-docs
+2. Find the API(s) you are looking for in the offline docs.
+3. Prompt a coding agent with the following:
+
+```
+Add a new command to the aps-cli to help accomplish a new workflow:
+
+<DESCRIBE-WORKFLOW>
+
+Refer to the APS Documentation here:
+
+<PATH-TO-RELEVANT-DOCS>
+```
+
+### Agent Self-Testing Enables Better & Faster CLI Extension
+
+When an agent extends this CLI, there is no barrier to real, end-to-end testing — not just unit tests. The development loop:
+
+1. The agent writes or edits TypeScript source.
+2. It checks for lint and type errors immediately (`eslint` + `tsc --noEmit`).
+3. Once those pass, it runs the CLI directly with `node src/index.ts <command>`.
+4. It inspects the live output, iterates, and verifies the feature works against real APS APIs.
+
+No build step is required. Node 22+ runs TypeScript natively, so the agent goes from source edit to live test in seconds. This keeps the feedback loop fast and keeps the agent honest — it cannot ship code it hasn't actually run.
+
+```
+  ┌─────────────────────────────────────────────────────────┐
+  │              Agent Development Loop                     │
+  └─────────────────────────────────────────────────────────┘
+
+    ┌───────────────────────────────────────────────────────┐
+    │                                                       │
+    ▼                                                       │
+        ┌──────────────┐                                    │
+        │  Write / Edit│                                    │
+        │  TypeScript  │                                    │
+        └──────┬───────┘                                    │
+               │                                            │
+               ▼                                            │
+        ┌──────────────┐        errors                      │
+        │  tsc --noEmit│ ───────────────────────────────────┤
+        │  eslint      │                                    │
+        └──────┬───────┘                                    │
+               │ clean                                      │
+               ▼                                            │
+        ┌──────────────┐        fails                       │
+        │  node        │ ───────────────────────────────────┤
+        │  src/index.ts│  (runtime / API error)             │
+        │  <command>   │                                    │
+        └──────┬───────┘                                    │
+               │ passes                                     │
+               ▼                                            │
+        ┌──────────────┐        bugs found                  │
+        │  Verify live │ ───────────────────────────────────┘
+        │  output      │  (logic / behavior error)
+        └──────┬───────┘
+               │ correct
+               ▼
+            done
+```
+
 ### Local Documentation Chain
 
-To prevent context overload, we present documentation in small pieces with a choose-your-own-adventure approach. Most context can be explained in the `--help` but for some commands you need dedicated documentation commands.
+To prevent context overload, we present documentation in small pieces with a choose-your-own-adventure approach. Most context can be explained in the `--help`, but for some commands you need dedicated documentation commands.
 
 Local, because some enterprise implementations of agents do not allow searching the web. Most of us are accustomed to having Claude or Cursor read the web, but note that in enterprise companies these features could be blocked.
 
