@@ -52,12 +52,11 @@ npm install -g typescript
 
 ## Setup
 
-### 1. Clone Agent Friendly APS Docs & Build
+### 1. Clone Agent Friendly APS Docs & Install
 
 ```bash
 git clone https://github.com/adskdimitrii/aps-ai-friendly-docs docs
 npm install
-npm run build
 ```
 
 ### 2. Configure & Log In
@@ -68,8 +67,8 @@ npm run build
 - **Callback URL**: `http://localhost:7482/callback`
 
 ```bash
-node ./dist/index.js configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET>
-node ./dist/index.js login
+node src/index.ts configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET>
+node src/index.ts login
 ```
 
 #### Option B — Import an existing token (3-legged OAuth - for OpenClaw-style agents using YOUR identity OR an Active Directory Service Account):
@@ -80,7 +79,7 @@ node ./dist/index.js login
 Use [https://aps-oauth.azurewebsites.net](https://aps-oauth.azurewebsites.net/) to create an access token. This workflow enables using the CLI with OpenClaw-style agents where the user cannot use the login workflow.
 
 ```bash
-node ./dist/index.js configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET> --token ~/Downloads/token.json
+node src/index.ts configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET> --token ~/Downloads/token.json
 ```
 
 #### Option C — Secure Service Account (SSA - For OpenClaw-style agents using Autodesk Secure Service Account):
@@ -90,7 +89,7 @@ node ./dist/index.js configure --client-id <YOUR-CLIENT-ID> --client-secret <YOU
 This creates a service account identity tied to your APS application. No browser login required — the CLI generates and signs JWT assertions automatically. Ideal for headless/automated environments.
 
 ```bash
-node ./dist/index.js configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET> --ssa
+node src/index.ts configure --client-id <YOUR-CLIENT-ID> --client-secret <YOUR-CLIENT-SECRET> --ssa
 ```
 
 After running this command, **COPY** the `SSA Email Address` the CLI creates and save it for later.
@@ -108,14 +107,12 @@ If using the **SSA** auth option, you must now grant the `SSA Email Address` acc
 ### Using the APS CLI Manually
 
 ```bash
-node src/index.js --help
+node src/index.ts --help
 ```
-
-If you're using a version of NodeJS that can't run TypeScrip natively use the built `dist/index.js`
 
 ### Teaching your Agent to Use the CLI
 
-Edit the path in `skills/aps-cli/SKILL.md` to the full path on your local machine where the `./dist/index.js` is located. Tell the agent to learn this skill as `aps-cli`.
+Edit the path in `skills/aps-cli/SKILL.md` to the full path on your local machine where `src/index.ts` is located. Tell the agent to learn this skill as `aps-cli`.
 
 ## Design Philosophy
 
@@ -389,7 +386,7 @@ The docs are kept local because some enterprise implementations of agents do not
 The AEC Data Model docs illustrate this well. Over 100 markdown files covering tutorials, GraphQL query references, object types, and input types live under `docs/aecdatamodel/`. Rather than injecting all of that into context at once, the agent starts with a lightweight index:
 
 ```
-node ./dist/index.js query-docs
+node src/index.ts query-docs
 ```
 
 ```
