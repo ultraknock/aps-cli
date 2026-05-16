@@ -23,7 +23,7 @@ Resources:
 Expected output:
 <Describe format — e.g. JSON to stdout, markdown table, summary paragraph>
 
-Not all CLI commands needed for this task may be implemented yet. You have the ability to add and augment the CLI source code using the APS API documentation at `docs/README.md`. Follow the guidance in `AGENTS.md` when changing the source code.
+Not all CLI commands needed for this task may be implemented yet. You have the ability to add and augment the CLI source code. Refer to the APS API documentation `docs/README.md`. Follow the guidance in `AGENTS.md` when changing the source code.
 ```
 
 From here on, it's up to you to use your knowledge of how to work with coding agents. This repo is designed to fast-track you by providing a framework for the agent to work with, easy access to documentation, and guidance on how to test and self-improve. I wish you luck. If you end up creating a workflow that has value, consider starring this repo.
@@ -108,8 +108,10 @@ If using the **SSA** auth option, you must now grant the `SSA Email Address` acc
 ### Using the APS CLI Manually
 
 ```bash
-node ./dist/index.js --help
+node src/index.js --help
 ```
+
+If you're using a version of NodeJS that can't run TypeScrip natively use the built `dist/index.js`
 
 ### Teaching your Agent to Use the CLI
 
@@ -330,22 +332,6 @@ Base CLI (this repo)
 The result is a CLI that is both immediately useful and fluid enough to grow with the task.
 
 Fewer commands mean a cleaner context window. From experience, agent performance on complex tasks improves as the interface simplifies — extraneous commands dilute the signal of what's actually useful. This CLI ships only what's needed to navigate APS data; nothing more.
-
-If you need to add new commands, I would recommend the following:
-
-1. Clone https://github.com/adskdimitrii/aps-ai-friendly-docs
-2. Find the API(s) you are looking for in the offline docs.
-3. Prompt a coding agent with the following:
-
-```
-Add a new command to the aps-cli to help accomplish a new workflow:
-
-<DESCRIBE-WORKFLOW>
-
-Refer to the APS Documentation here:
-
-<PATH-TO-RELEVANT-DOCS>
-```
 
 ### Agent Self-Testing Enables Better & Faster CLI Extension
 

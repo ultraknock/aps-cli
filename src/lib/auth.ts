@@ -22,7 +22,7 @@ function ensureConfigDir(): void {
 }
 
 const AUTH_TOKEN_URL = 'https://developer.api.autodesk.com/authentication/v2/token';
-const SSA_SCOPES = ['data:read'];
+const SSA_SCOPES = ['data:read', 'data:write', 'data:create', 'data:search'];
 
 const ALGORITHM = 'aes-256-gcm';
 const SALT = 'aps-cli-v1';
