@@ -57,21 +57,20 @@ git clone https://github.com/adskdimitrii/aps-cli.git "$env:LOCALAPPDATA\aps-cli
 cd "$env:LOCALAPPDATA\aps-cli"
 ```
 
-### Build
+### Install Packages & Docs
 
 From inside the cloned directory, run:
 
 ```bash
 git clone https://github.com/adskdimitrii/aps-ai-friendly-docs docs
 npm install
-npm run build
 ```
 
 > The docs clone is required — the build step copies AEC Data Model docs into the output directory.
 
 ### Verify
 ```bash
-node ./dist/index.js --help
+node src/index.ts --help
 ```
 
 ---
@@ -85,7 +84,6 @@ From the install directory, pull the latest code and rebuild:
 cd ~/.local/share/aps-cli
 git pull
 npm install
-npm run build
 ```
 
 ### Windows (PowerShell)
@@ -93,5 +91,4 @@ npm run build
 cd "$env:LOCALAPPDATA\aps-cli"
 git pull
 npm install
-npm run build
 ```
