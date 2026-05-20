@@ -6,3 +6,4 @@ dist/
 docs/
 .devcontainer/devcontainer-lock.json
 setup-nn26-auth.ts
+.claude-flow/
