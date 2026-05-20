@@ -8,6 +8,11 @@ import { urlCommand } from './commands/url.ts';
 import { downloadCommand } from './commands/download.ts';
 import { lsCommand } from './commands/ls.ts';
 import { registerRfiCommands } from './commands/rfi.ts';
+import { registerLocationCommands } from './commands/locations.ts';
+import { registerAssetCommands } from './commands/assets.ts';
+import { registerSheetCommands } from './commands/sheets.ts';
+import { registerFileCommands } from './commands/files.ts';
+import { registerRecapCommands } from './commands/recap.ts';
 
 const program = new Command();
 
@@ -172,6 +177,11 @@ Examples:
   });
 
 registerRfiCommands(program);
+registerLocationCommands(program);
+registerAssetCommands(program);
+registerSheetCommands(program);
+registerFileCommands(program);
+registerRecapCommands(program);
 
 program.parseAsync(process.argv).catch((err: unknown) => {
   const msg = err instanceof Error ? err.message : String(err);

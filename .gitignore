@@ -5,3 +5,4 @@ dist/
 .DS_Store
 docs/
 .devcontainer/devcontainer-lock.json
+setup-nn26-auth.ts
